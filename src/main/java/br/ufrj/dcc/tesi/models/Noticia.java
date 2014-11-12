@@ -7,6 +7,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import br.ufrj.dcc.tesi.enums.Portal;
 
@@ -16,6 +17,9 @@ public class Noticia implements Serializable {
 
 	private static final long serialVersionUID = -3401155538699619489L;
 
+	@Transient
+	private long id;
+	
 	@Id
 	@Column
 	private String url;
@@ -80,9 +84,12 @@ public class Noticia implements Serializable {
 		this.titulo = titulo;
 	}
 
-
-	public Portal getPortal() {
+	public Portal PortalVO() {
 		return portal;
+	}
+
+	public String getPortal() {
+		return portal.name();
 	}
 
 
@@ -98,5 +105,13 @@ public class Noticia implements Serializable {
 
 	public void setUrl(String url) {
 		this.url = url;
+	}
+
+	public long get_id() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
 	}
 }
