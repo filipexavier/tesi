@@ -8,6 +8,7 @@ import br.ufrj.dcc.tesi.utils.MongoDBUtil;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -27,10 +28,20 @@ public class Datatxt {
 			StringBuilder sb = new StringBuilder(url).append("text=").append(txt).append("&include=image%2Cabstract%2Ctypes%2Ccategories%2Clod&country=-1");
 			sb.append("&$app_id=").append(ID).append("&$app_key=").append(KEY);
 			System.out.println("GET " + sb.toString());
-//			String jsonList = HTTPUtil.doGET(sb.toString());
-//			System.out.println(jsonList);
-//			JsonElement result = new JsonParser().parse(jsonList);
-//			JsonArray entities = result.getAsJsonArray();
+			String jsonList = HTTPUtil.doGET(sb.toString());
+			System.out.println(jsonList);
+			JsonElement result = new JsonParser().parse(jsonList);
+			result = result.getAsJsonObject().get("annotations");
+			JsonArray entities = result.getAsJsonArray();
+			
+			for(JsonElement e : entities){
+				String name = e.getAsJsonObject().get("title").getAsString();
+				String lod = e.getAsJsonObject().get("lod").getAsString();
+				String start = e.getAsJsonObject().get("start").getAsString();
+				String fim = e.getAsJsonObject().get("fim").getAsString();
+				//JsonObject obj = new org.json.JsonObject().;
+				
+			}
 			break;
 		}
 	}

@@ -36,6 +36,9 @@ public class Noticia implements Serializable {
 	@Column
 	private Date data;
 	
+	@Column
+	private String entidades;
+	
 	
 	public Noticia(){
 		
@@ -113,5 +116,13 @@ public class Noticia implements Serializable {
 
 	public void setId(long id) {
 		this.id = id;
+	}
+
+	public String getEntidades() {
+		return entidades;
+	}
+
+	public void setEntidades(String entidades) {
+		this.entidades = entidades;
 	}
 }
