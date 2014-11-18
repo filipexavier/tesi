@@ -30,15 +30,20 @@ public class Noticia implements Serializable {
 	@Column
 	private String titulo;
 	
+	private String subTitulo;
+	
 	@Column
 	private String texto;
 	
 	@Column
 	private Date data;
 	
+	private Date dataAtualizacao;
+	
 	@Column
 	private String entidades;
 	
+	private String autor;
 	
 	public Noticia(){
 		
@@ -124,5 +129,29 @@ public class Noticia implements Serializable {
 
 	public void setEntidades(String entidades) {
 		this.entidades = entidades;
+	}
+
+	public String getAutor() {
+		return autor;
+	}
+
+	public void setAutor(String autor) {
+		this.autor = autor;
+	}
+
+	public String getSubTitulo() {
+		return subTitulo;
+	}
+
+	public void setSubTitulo(String subTitulo) {
+		this.subTitulo = subTitulo;
+	}
+
+	public Date getDataAtualizacao() {
+		return dataAtualizacao;
+	}
+
+	public void setDataAtualizacao(Date dataAtualizacao) {
+		this.dataAtualizacao = dataAtualizacao;
 	}
 }

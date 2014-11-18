@@ -22,11 +22,15 @@ import org.jsoup.select.Elements;
 
 import twitter4j.JSONObject;
 import br.ufrj.dcc.tesi.Resources;
+import br.ufrj.dcc.tesi.daos.NoticiaDAO;
 import br.ufrj.dcc.tesi.enums.Portal;
 import br.ufrj.dcc.tesi.models.Noticia;
 import br.ufrj.dcc.tesi.utils.MongoDBUtil;
 import br.ufrj.dcc.tesi.utils.MySQLUtil;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParser;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -38,6 +42,9 @@ public class VejaCrawler {
 	private static String url = "http://veja.abril.com.br/busca/?qu=elei%C3%A7%C3%B5es+2014&origembusca=bsc&multimidia-meta_nav:Not%C3%ADcia&editoria-meta_nav:Brasil&date:[2014-08-01T00:00:00Z%20TO%202014-10-31T23:59:00Z]&dt=per";
 							
 	public static void main(String[] args) throws IOException, ParseException {
+		
+		System.out.println(Jsoup.connect(url).timeout(0).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get().html());
+		
 		
 		List<StringBuilder> sbList = new ArrayList<StringBuilder>();
         for(int i = 1; i <=22; i++){
@@ -60,10 +67,7 @@ public class VejaCrawler {
 	        n.setTitulo(doc.select("h1.t-bigger-black").get(0).text());
 	        n.setData(getDate(doc.getElementsByClass("data-hora").get(0).text()));
 	        n.setTexto(corpo.toString());
-            DBObject dbObject = (DBObject) JSON.parse(new JSONObject(n).toString());
-            DBObject query = new BasicDBObject("url", n.getUrl());
-            collection.update(query, dbObject, true, false);
-	        System.out.println("Noticia atualizada com corpo");
+            NoticiaDAO.getInstance().save(collection, n);
         }
 	}
 
