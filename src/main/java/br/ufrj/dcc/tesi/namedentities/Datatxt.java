@@ -4,6 +4,8 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
 
 import br.ufrj.dcc.tesi.utils.HTTPUtil;
 import br.ufrj.dcc.tesi.utils.MongoDBUtil;
@@ -21,71 +23,168 @@ public class Datatxt {
 	
 	private static final String ID = "0936d14f";
 	private static final String KEY = "0057de6c2259788f64b622bef7e36d28";
+	public static final String URL = "https://api.dandelion.eu/datatxt/nex/v1/?";
+	public static final String APPEND_CHARAC = "&";
+	public static final String ATTRIBUTES = "include=image%2Cabstract%2Ctypes%2Ccategories%2Clod&country=-1";
+	public static final int MAX_CHARAC_HTML_GET = 6500;
 
-	public static void main(String[] args) throws UnsupportedEncodingException, FileNotFoundException{
-		PrintWriter writer = new PrintWriter("Noticias.txt", "UTF-8");
+	public static void main(String[] args){
+		PrintWriter writer = null;
+		try {
+			writer = new PrintWriter("Noticias.txt", "UTF-8");
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			return;
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			return;
+		}
 		
+		populaNoticiasDatatxt(writer);
+//		writer.close();
+	}
+
+	public static void populaNoticiasDatatxt(PrintWriter writer){
 		DBCollection collection = MongoDBUtil.getInstance().getDatabase().getCollection(MongoDBUtil.COLLECTION);
 		DBCursor cursor = collection.find();
+		try {
+			saveNamedEntities(cursor,collection,writer);
+		} catch (UnsupportedEncodingException e) {
+			System.out.println("Problema ao montar a url");
+			e.printStackTrace();
+		}
+	}
+	
+	public static void saveNamedEntities(DBCursor cursor, DBCollection collection, PrintWriter writer) throws UnsupportedEncodingException{
 		while(cursor.hasNext()){
-			String url = "https://api.dandelion.eu/datatxt/nex/v1/?";
 			DBObject n = cursor.next();
-			String txt = n.get("titulo").toString();
-			txt = URLEncoder.encode(txt,"UTF-8");
-			StringBuilder sb = new StringBuilder(url).append("text=").append(txt).append("&include=image%2Cabstract%2Ctypes%2Ccategories%2Clod&country=-1");
-			sb.append("&$app_id=").append(ID).append("&$app_key=").append(KEY);
-			System.out.println("GET " + sb.toString());
-			String jsonList;
-			try {
-				jsonList = HTTPUtil.doGET(sb.toString());
-			} catch (Exception e1) {
-				System.out.println("Deu problema no datatxt. Move on...");
-				e1.printStackTrace();
-				continue;
-			}
-			System.out.println(jsonList);
-			JsonElement result = new JsonParser().parse(jsonList);
-			result = result.getAsJsonObject().get("annotations");
+			if(n.get("texto") == null) continue;
+			String txt = n.get("texto").toString();
+			List<String> entitiesList = runDatatxtRequest(txt);
+			if(entitiesList == null) continue;
+			
+			System.out.println(entitiesList);
 			JsonArray entities;
 			try {
-				entities = result.getAsJsonArray();
-			} catch (Exception e1) {
-				System.out.println("Deu problema ao converter o json. Move on...");
-				e1.printStackTrace();
+				entities = getEntitiesFromJson(entitiesList);
+			} catch (Exception e) {
+				System.out.println("Problema ao converter Json");
+				e.printStackTrace();
 				continue;
-			}
-			JsonArray namedEntitiesArray = new JsonArray();
-			if(namedEntitiesArray.size()>0){
-				writer.println(n.get("titulo"));
-				writer.println(n.get("url"));
-				writer.println(n.get("texto"));
-				writer.println("Entidades:");
-			}
-			
-			for(JsonElement e : entities){
-//				String name = e.getAsJsonObject().get("title").getAsString();
-//				String lod = e.getAsJsonObject().get("lod").getAsString();
-//				String start = e.getAsJsonObject().get("start").getAsString();
-//				String fim = e.getAsJsonObject().get("fim").getAsString();
-				JsonObject obj = e.getAsJsonObject();
-				obj.remove("uri");
-				obj.remove("spot");
-				obj.remove("confidence");
-				obj.remove("id");
-				obj.remove("abstract");
-				obj.remove("title");
-				obj.remove("types");
-				namedEntitiesArray.add(obj);
-				writer.println(obj.get("label"));
-				writer.println("lod");
-				writer.println("categories");
-				writer.println("------------\n");
 			}
 			n.put("entidades", entities.toString());
             DBObject query = new BasicDBObject("url", n.get("url"));
             collection.update(query, n, true, false);
 	        System.out.println("Noticia atualizada com entidades nomeadas");
 		}
-		writer.close();
+	}
+	
+	private static JsonArray getEntitiesFromJson(List<String> entitiesList) {
+		//Itera sobre strings com o resultado do dataTxt
+		JsonArray namedEntitiesArray = new JsonArray();
+		List<String> entidadesNoArray = new ArrayList();
+		for(String strEntities : entitiesList){
+			JsonElement result = new JsonParser().parse(strEntities);
+			result = result.getAsJsonObject().get("annotations");
+			JsonArray entitiesJson = result.getAsJsonArray();
+			//writeHeaderToFile(writer,n,namedEntitiesArray);
+			
+			//Itera sobre Lista de entidades deste pedaco, e adiciona na lista de todos desta noticia
+			for(JsonElement e : entitiesJson){
+				JsonObject obj = e.getAsJsonObject();
+				String labelEntidade = obj.get("label").toString();
+				if(!entidadesNoArray.contains(labelEntidade)){
+					removeIrrelevantData(obj);
+					namedEntitiesArray.add(obj);
+					entidadesNoArray.add(labelEntidade);
+					//writeDataToFile(writer, obj);
+				}
+			}
+		}
+		return namedEntitiesArray;
+	}
+	private static List<String> runDatatxtRequest(String txt){
+		try {
+			txt = URLEncoder.encode(txt,"UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			System.out.println("Problema no encoding ao converter texto para urlCompatible");
+			e.printStackTrace();
+		}
+		
+		List<String> entitiesList = new ArrayList<String>();
+		if(txt.length()>MAX_CHARAC_HTML_GET){
+			List<String> subLists = divideTexto(txt, MAX_CHARAC_HTML_GET);
+			System.out.println("texto " + txt );
+			System.out.println(subLists);
+			for(String s : subLists){
+				String entities = getNamedEntities(s);
+				entitiesList.add(entities);
+			}
+		}else{
+			String entities = getNamedEntities(txt);
+			entitiesList.add(entities);
+		}
+		return entitiesList;
+	}
+	
+	private static String getNamedEntities(String txt) {
+		StringBuilder sb = new StringBuilder(URL).append("text=").append(txt).
+				append(APPEND_CHARAC).append(ATTRIBUTES).
+				append(APPEND_CHARAC).append("$app_id=").append(ID).
+				append(APPEND_CHARAC).append("$app_key=").append(KEY);
+		System.out.println("GET ("+ sb.toString().length() + ") - " + sb.toString());
+		String jsonList;
+		try {
+			jsonList = HTTPUtil.doGET(sb.toString());
+		} catch (Exception e1) {
+			System.out.println("Deu problema na requisicao do datatxt");
+			e1.printStackTrace();
+			return null;
+		}
+		return jsonList;
+	}
+	
+	private static List<String> divideTexto(String txt, int maxCharacHtmlGet) {
+		List<String> subLists = new ArrayList<String>();
+		while(txt.length()>maxCharacHtmlGet){
+			for(int i = maxCharacHtmlGet; i<txt.length(); i++){
+				if(String.valueOf(txt.charAt(i)).equals(".")){
+					subLists.add(txt.subSequence(0, i-1).toString());
+					if(String.valueOf(txt.charAt(i+1)).equals("+")){
+						txt = txt.substring(i+2);
+					} else{
+						txt = txt.substring(i+1);
+					}
+					break;
+				}
+			}
+		}
+		//Add ultima parte, que pode ter mais que o maximo
+		subLists.add(txt);
+		
+		return subLists;
+	}
+	private static void removeIrrelevantData(JsonObject obj) {
+		obj.remove("uri");
+		obj.remove("spot");
+		obj.remove("confidence");
+		obj.remove("id");
+		obj.remove("abstract");
+		obj.remove("title");
+		obj.remove("types");
+	}
+	private static void writeDataToFile(PrintWriter writer, JsonObject obj) {
+		writer.println(obj.get("label"));
+		writer.println("lod");
+		writer.println("categories");
+		writer.println("------------\n");
+	}
+	private static void writeHeaderToFile(PrintWriter writer, DBObject n, JsonArray namedEntitiesArray) {
+		if(namedEntitiesArray.size()>0){
+			writer.println(n.get("titulo"));
+			writer.println(n.get("url"));
+			writer.println(n.get("texto"));
+			writer.println("Entidades:");
+		}
 	}
 }

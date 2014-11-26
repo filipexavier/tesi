@@ -105,7 +105,7 @@ public class OGloboCrawler {
 	        n.setDataAtualizacao(attDate);
 	        n.setPortal(Portal.OGLOBO);
 	        n.setSubTitulo(description);
-	        n.setTexto(title);
+	        n.setTitulo(title);
 	        n.setTexto(text.toString());
 	        n.setUrl(url);
 	        
