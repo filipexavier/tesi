@@ -4,41 +4,28 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import org.hibernate.NonUniqueObjectException;
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import twitter4j.JSONObject;
 import br.ufrj.dcc.tesi.Resources;
 import br.ufrj.dcc.tesi.daos.NoticiaDAO;
 import br.ufrj.dcc.tesi.enums.Portal;
 import br.ufrj.dcc.tesi.models.Noticia;
 import br.ufrj.dcc.tesi.utils.MongoDBUtil;
-import br.ufrj.dcc.tesi.utils.MySQLUtil;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonParser;
-import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
 
 public class VejaCrawler {
 	
-	//Noticias relacionadas as Eleicoes 2014, de 01/08/2014 a 31/11/2014
+	//Noticias relacionadas as Eleicoes 2014, de 01/08/2014 a 31/10/2014
 	private static String url = "http://veja.abril.com.br/busca/?qu=elei%C3%A7%C3%B5es+2014&origembusca=bsc&multimidia-meta_nav:Not%C3%ADcia&editoria-meta_nav:Brasil&date:[2014-08-01T00:00:00Z%20TO%202014-10-31T23:59:00Z]&dt=per";
 							
 	public static void main(String[] args) throws IOException, ParseException {
