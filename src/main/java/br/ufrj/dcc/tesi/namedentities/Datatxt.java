@@ -5,19 +5,24 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import br.ufrj.dcc.tesi.daos.NoticiaDAO;
+import br.ufrj.dcc.tesi.models.Noticia;
 import br.ufrj.dcc.tesi.utils.HTTPUtil;
 import br.ufrj.dcc.tesi.utils.MongoDBUtil;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
 
 public class Datatxt {
 	
@@ -64,7 +69,7 @@ public class Datatxt {
 			if(entitiesList == null) continue;
 			
 			System.out.println(entitiesList);
-			JsonArray entities;
+			List<DBObject> entities;
 			try {
 				entities = getEntitiesFromJson(entitiesList);
 			} catch (Exception e) {
@@ -72,37 +77,39 @@ public class Datatxt {
 				e.printStackTrace();
 				continue;
 			}
-			n.put("entidades", entities.toString());
-            DBObject query = new BasicDBObject("url", n.get("url"));
-            collection.update(query, n, true, false);
+			Noticia noticia = new Noticia(n);
+			noticia.setEntidades(entities);
+            NoticiaDAO.getInstance().save(collection, noticia);
 	        System.out.println("Noticia atualizada com entidades nomeadas");
 		}
 	}
 	
-	private static JsonArray getEntitiesFromJson(List<String> entitiesList) {
+	private static List<DBObject> getEntitiesFromJson(List<String> noticiaEntitiesList) {
 		//Itera sobre strings com o resultado do dataTxt
-		JsonArray namedEntitiesArray = new JsonArray();
-		List<String> entidadesNoArray = new ArrayList();
-		for(String strEntities : entitiesList){
-			JsonElement result = new JsonParser().parse(strEntities);
-			result = result.getAsJsonObject().get("annotations");
-			JsonArray entitiesJson = result.getAsJsonArray();
+		List<DBObject> namedEntitiesArray = new ArrayList<DBObject>();
+		List<String> entidadesNoArray = new ArrayList<String>();
+		for(String strEntities : noticiaEntitiesList){
+			DBObject annotations = (DBObject) JSON.parse(strEntities);
+			BasicDBList requestEntitiesList = (BasicDBList) annotations.get("annotations");
 			//writeHeaderToFile(writer,n,namedEntitiesArray);
 			
-			//Itera sobre Lista de entidades deste pedaco, e adiciona na lista de todos desta noticia
-			for(JsonElement e : entitiesJson){
-				JsonObject obj = e.getAsJsonObject();
-				String labelEntidade = obj.get("label").toString();
+			//Itera sobre Lista de entidades deste pedaco/requisicao, e adiciona na lista de todos desta noticia
+			for(Object obj : requestEntitiesList){
+				
+				DBObject entityObj = (DBObject) JSON.parse(obj.toString());
+				String labelEntidade = entityObj.get("label").toString();
 				if(!entidadesNoArray.contains(labelEntidade)){
-					removeIrrelevantData(obj);
-					namedEntitiesArray.add(obj);
+					removeIrrelevantData(entityObj);
+					namedEntitiesArray.add(entityObj);
 					entidadesNoArray.add(labelEntidade);
 					//writeDataToFile(writer, obj);
 				}
 			}
 		}
+
 		return namedEntitiesArray;
 	}
+	
 	private static List<String> runDatatxtRequest(String txt){
 		try {
 			txt = URLEncoder.encode(txt,"UTF-8");
@@ -164,14 +171,14 @@ public class Datatxt {
 		
 		return subLists;
 	}
-	private static void removeIrrelevantData(JsonObject obj) {
-		obj.remove("uri");
-		obj.remove("spot");
-		obj.remove("confidence");
-		obj.remove("id");
-		obj.remove("abstract");
-		obj.remove("title");
-		obj.remove("types");
+	private static void removeIrrelevantData(DBObject obj) {
+		obj.removeField("uri");
+		obj.removeField("spot");
+		obj.removeField("confidence");
+		obj.removeField("id");
+		obj.removeField("abstract");
+		obj.removeField("title");
+		obj.removeField("types");
 	}
 	private static void writeDataToFile(PrintWriter writer, JsonObject obj) {
 		writer.println(obj.get("label"));

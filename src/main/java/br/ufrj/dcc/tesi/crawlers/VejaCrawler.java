@@ -76,9 +76,9 @@ public class VejaCrawler {
 		String[] datahora = text.replaceAll(" ", "").split("-");
 		String data = datahora[0];
 		String[] dataVec = data.split("/");
-		int dia = Integer.parseInt(dataVec[0]) - 1;
+		int dia = Integer.parseInt(dataVec[0]);
 		int mes = Integer.parseInt(dataVec[1]) - 1;
-		int ano = Integer.parseInt(dataVec[2]) - 1;
+		int ano = Integer.parseInt(dataVec[2]);
 		String hora = datahora[1];
 		String[] horaVec = hora.split(":");
 		int h = Integer.parseInt(horaVec[0]);

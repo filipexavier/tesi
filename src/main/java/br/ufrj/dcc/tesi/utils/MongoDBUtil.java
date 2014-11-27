@@ -21,7 +21,7 @@ public class MongoDBUtil {
         private static MongoDBUtil instance = new MongoDBUtil();
         private DB database;
         
-        public static String COLLECTION = "noticias";
+        public static String COLLECTION = "noticiasTeste";
         
         public static MongoDBUtil getInstance() {
                 if (instance.getDatabase() == null) {

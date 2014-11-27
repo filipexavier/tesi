@@ -2,6 +2,7 @@ package br.ufrj.dcc.tesi.models;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -9,7 +10,10 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import com.mongodb.DBObject;
+
 import br.ufrj.dcc.tesi.enums.Portal;
+import br.ufrj.dcc.tesi.utils.MongoDBUtil;
 
 @Entity
 @Table(name="noticia")
@@ -41,7 +45,7 @@ public class Noticia implements Serializable {
 	private Date dataAtualizacao;
 	
 	@Column
-	private String entidades;
+	private List<DBObject> entidades;
 	
 	private String autor;
 	
@@ -62,6 +66,39 @@ public class Noticia implements Serializable {
 		this.data = data;
 	}
 
+
+	public Noticia(DBObject n) {
+		try {
+			this.url = n.get("url").toString();
+		} catch (Exception e) {
+			System.out.println("Nao foi possivel obter o campo url da noticia recuperada do banco");
+		}
+		try {
+		this.autor = n.get("autor").toString();
+		} catch (Exception e) {
+			System.out.println("Nao foi possivel obter o campo autor da noticia recuperada do banco");
+		}
+		try {
+			this.texto = n.get("texto").toString();
+		} catch (Exception e) {
+			System.out.println("Nao foi possivel obter o campo texto da noticia recuperada do banco");
+		}
+		try {
+			this.titulo = n.get("titulo").toString();
+		} catch (Exception e) {
+			System.out.println("Nao foi possivel obter o campo titulo da noticia recuperada do banco");
+		}
+		try {
+			this.data = MongoDBUtil.parseDate(n.get("data").toString());
+		} catch (Exception e) {
+			System.out.println("Nao foi possivel obter o campo data da noticia recuperada do banco");
+		}
+		try {
+			this.portal = Portal.valueOf((n.get("portal").toString()));
+		} catch (Exception e) {
+			System.out.println("Nao foi possivel obter o campo portal da noticia recuperada do banco");
+		}
+	}
 
 	public Date getData() {
 		return data;
@@ -123,12 +160,12 @@ public class Noticia implements Serializable {
 		this.id = id;
 	}
 
-	public String getEntidades() {
+	public List<DBObject> getEntidades() {
 		return entidades;
 	}
 
-	public void setEntidades(String entidades) {
-		this.entidades = entidades;
+	public void setEntidades(List<DBObject> entities) {
+		this.entidades = entities;
 	}
 
 	public String getAutor() {
