@@ -3,47 +3,28 @@ package br.ufrj.dcc.tesi.models;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-
 import com.mongodb.DBObject;
-
 import br.ufrj.dcc.tesi.enums.Portal;
 import br.ufrj.dcc.tesi.utils.MongoDBUtil;
 
-@Entity
-@Table(name="noticia")
 public class Noticia implements Serializable {
 
 	private static final long serialVersionUID = -3401155538699619489L;
-
-	@Transient
-	private long id;
 	
-	@Id
-	@Column
+	private long id;	
 	private String url;
-	
-	@Column
-	private Portal portal;
-	
-	@Column
+	private Portal portal;	
 	private String titulo;
-	
 	private String subTitulo;
-	
-	@Column
 	private String texto;
-	
-	@Column
 	private Date data;
-	
 	private Date dataAtualizacao;
-	
+
 	@Column
 	private List<DBObject> entidades;
 	
@@ -104,26 +85,21 @@ public class Noticia implements Serializable {
 		return data;
 	}
 
-
 	public void setData(Date data) {
 		this.data = data;
 	}
-
 
 	public String getTexto() {
 		return texto;
 	}
 
-
 	public void setTexto(String texto) {
 		this.texto = texto;
 	}
 
-
 	public String getTitulo() {
 		return titulo;
 	}
-
 
 	public void setTitulo(String titulo) {
 		this.titulo = titulo;
@@ -137,16 +113,13 @@ public class Noticia implements Serializable {
 		return portal.name();
 	}
 
-
 	public void setPortal(Portal portal) {
 		this.portal = portal;
 	}
 
-
 	public String getUrl() {
 		return url;
 	}
-
 
 	public void setUrl(String url) {
 		this.url = url;
