@@ -22,7 +22,7 @@ public class OGloboCrawler {
 	static int MAX_PAGE_NUMBER = 100;
 	
 	static final String SITE_BASE = "http://oglobo.globo.com/";
-	
+
 	public static void main(String[] args) throws IOException {
 		
 		DBCollection collection = MongoDBUtil.getInstance().getDatabase().getCollection(MongoDBUtil.COLLECTION);
@@ -135,6 +135,7 @@ public class OGloboCrawler {
 		Document doc = null;
 		
 		String titulo = null;
+		String autor = null;
 		Date dataPublicacao = null;
 		Elements corpoNoticia = null;
 		StringBuilder sb = new StringBuilder("");
@@ -151,6 +152,7 @@ public class OGloboCrawler {
 			e = page.get(0);
 			
 			titulo = e.getElementsByAttributeValue("itemprop", "headline").text();
+			autor =  e.getElementsByTag("h2").text().trim();
 			
 			Elements els = e.getElementsByClass("data-cadastro");
 			String dataPublicacaoStr = els.toString();
@@ -170,6 +172,7 @@ public class OGloboCrawler {
 	        n.setPortal(Portal.OGLOBO);
 	        n.setUrl(url);
 	        n.setTitulo(titulo);
+	        n.setAutor(autor);
 	        n.setData(dataPublicacao);
 	        n.setTexto(sb.toString());    
 	        
