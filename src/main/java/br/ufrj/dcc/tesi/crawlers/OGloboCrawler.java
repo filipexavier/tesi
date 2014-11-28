@@ -9,6 +9,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import br.ufrj.dcc.tesi.daos.NoticiaDAO;
 import br.ufrj.dcc.tesi.enums.Portal;
 import br.ufrj.dcc.tesi.models.Noticia;
 import br.ufrj.dcc.tesi.utils.MongoDBUtil;
@@ -118,14 +119,7 @@ public class OGloboCrawler {
 	        n.setDataAtualizacao(dataAtualizacao);
 	        n.setTexto(sb.toString());    
 	        
-	        //NoticiaDAO.getInstance().save(collection, n);
-	        
-	        System.out.println("Titulo: " + n.getTitulo());
-	        System.out.println("Subtitulo: " + n.getSubTitulo());
-	        System.out.println("Corpo: " + n.getTexto());
-	        System.out.println("Data: " + n.getData());
-	        System.out.println("Data att: " + n.getDataAtualizacao());
-	        System.out.println("--------------------------");
+	        NoticiaDAO.getInstance().save(collection, n);
 	        
 		} catch (Exception e1) {
 			System.out.println("Padrao de artigo nao reconhecido. Tentaremos outro.");
@@ -179,15 +173,10 @@ public class OGloboCrawler {
 	        n.setData(dataPublicacao);
 	        n.setTexto(sb.toString());    
 	        
-	        //NoticiaDAO.getInstance().save(collection, n);
-	        
-	        System.out.println("Titulo: " + n.getTitulo());
-	        System.out.println("Corpo: " + n.getTexto());
-	        System.out.println("Data: " + n.getData());
-	        System.out.println("--------------------------");
+	        NoticiaDAO.getInstance().save(collection, n);
 	        
 		} catch (Exception e1) {
-			System.out.println("Nao foi possivel processar o padrao de artigo");
+			System.out.println("Nao foi possivel processar o padrao de artigo.");
 			e1.printStackTrace();
 		}
 	}
@@ -211,7 +200,7 @@ public class OGloboCrawler {
 			h = Integer.parseInt(horaVec[0]);
 			m = Integer.parseInt(horaVec[1]);
 		} catch (NumberFormatException e) {
-			System.out.println("Problema ao fazer parse da data");
+			System.out.println("Problema ao fazer parse da data.");
 			e.printStackTrace();
 			return null;
 		}
