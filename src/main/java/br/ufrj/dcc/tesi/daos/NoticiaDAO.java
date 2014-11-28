@@ -1,5 +1,7 @@
 package br.ufrj.dcc.tesi.daos;
 
+import java.util.List;
+
 import twitter4j.JSONObject;
 import br.ufrj.dcc.tesi.models.Noticia;
 
@@ -16,6 +18,12 @@ public class NoticiaDAO {
 	public static NoticiaDAO getInstance(){
 		if(instance == null) instance = new NoticiaDAO();
 		return instance;
+	}
+	
+	public void save(DBCollection collection, List<Noticia> noticias) {
+		for(Noticia n : noticias){
+			save(collection, n);
+		}
 	}
 	public void save(DBCollection collection, Noticia n) {
 		DBObject dbObject = (DBObject) JSON.parse(new JSONObject(n).toString());

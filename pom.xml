@@ -5,13 +5,23 @@
   <version>0.0.1-SNAPSHOT</version>
   <name>TESI</name>
   <dependencies>
-    <dependency>
-      <groupId>edu.uci.ics</groupId>
-      <artifactId>crawler4j</artifactId>
-      <version>3.5</version>
-      <type>jar</type>
-      <scope>compile</scope>
-    </dependency>
+	<dependency>
+		<groupId>edu.uci.ics</groupId>
+		<artifactId>crawler4j</artifactId>
+		<version>3.5</version> 
+		<type>jar</type>
+		<scope>compile</scope>
+	</dependency>
+	<dependency>
+		<groupId>com.crawljax</groupId>
+		<artifactId>crawljax-core</artifactId>
+		<version>3.5.1</version>
+	</dependency>
+	<dependency>
+		<groupId>com.google.javascript</groupId>
+		<artifactId>closure-compiler</artifactId>
+		<version>r946</version>
+	</dependency>
     <dependency>
 	  <!-- jsoup HTML parser library @ http://jsoup.org/ -->
 	  <groupId>org.jsoup</groupId>

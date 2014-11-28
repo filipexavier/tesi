@@ -30,8 +30,8 @@ public class VejaCrawler {
 							
 	public static void main(String[] args) throws IOException, ParseException {
 		
-		System.out.println(Jsoup.connect(url).timeout(0).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").get().html());
-		
+		Document doc = Jsoup.connect(url).timeout(0).userAgent("Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)").get();
+		System.out.println(doc);
 		
 		List<StringBuilder> sbList = new ArrayList<StringBuilder>();
         for(int i = 1; i <=22; i++){

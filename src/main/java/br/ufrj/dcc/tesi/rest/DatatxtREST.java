@@ -6,8 +6,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
-import org.apache.log4j.Logger;
-
 import br.ufrj.dcc.tesi.models.Noticia;
 
 import com.mongodb.BasicDBObject;
@@ -16,7 +14,6 @@ import com.mongodb.DBCursor;
 
 @Path("/noticias")
 public class DatatxtREST extends AbstractREST {
-	Logger logger = Logger.getLogger(Noticia.class);
 	
 //	@GET
 //	@Produces(JSON_UTF8)
