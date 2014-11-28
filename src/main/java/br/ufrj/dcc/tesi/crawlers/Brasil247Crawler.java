@@ -17,14 +17,9 @@ import org.jsoup.select.Elements;
 import br.ufrj.dcc.tesi.daos.NoticiaDAO;
 import br.ufrj.dcc.tesi.enums.Portal;
 import br.ufrj.dcc.tesi.models.Noticia;
+import br.ufrj.dcc.tesi.utils.DateUtil;
 import br.ufrj.dcc.tesi.utils.MongoDBUtil;
 
-import com.crawljax.browser.EmbeddedBrowser.BrowserType;
-import com.crawljax.core.CrawlSession;
-import com.crawljax.core.CrawljaxRunner;
-import com.crawljax.core.configuration.BrowserConfiguration;
-import com.crawljax.core.configuration.CrawljaxConfiguration;
-import com.crawljax.core.configuration.CrawljaxConfiguration.CrawljaxConfigurationBuilder;
 import com.mongodb.DBCollection;
 
 public class Brasil247Crawler {
@@ -32,7 +27,7 @@ public class Brasil247Crawler {
 		//Resultado da busca no Brasil247 por "Eleições 2014"
 		private static String url = "http://www.google.com.br/cse?cx=partner-pub-8594520780167960:4101184130&ie=UTF-8&q=elei%C3%A7%C3%B5es+2014&sa=Buscar&ref=&nojs=1";
 		private static String userAgent = "Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6";
-								
+		private static Integer savedNewsNum = 1;	
 		public static void main(String[] args) throws IOException, ParseException {
 			
 			DBCollection collection = MongoDBUtil.getInstance().getDatabase().getCollection(MongoDBUtil.COLLECTION);
@@ -41,25 +36,39 @@ public class Brasil247Crawler {
 
 		private static List<Noticia> crawlSearchResults(String url, DBCollection collection) {
 			String nextPageUrl = url;
+			int page = 1;
+			Document result = null;
 			while(nextPageUrl != null){
-				Document result;
 				try {
-					result = Jsoup.connect(url).timeout(0).userAgent(userAgent).get();
+					result = Jsoup.connect(nextPageUrl).timeout(0).userAgent(userAgent).get();
 				} catch (IOException e) {
-					System.out.println("Problema ao pegar o html");
+					System.out.println("Problema ao pegar o html da pagina " + page);
 					e.printStackTrace();
-					break;
+					page++;
+					nextPageUrl = getNextPage(result,page);
+					continue;
 				}
 				List<String> noticiasLinks = getLinksResult(result);
 				List<Noticia> noticias = getNoticiasFromLinks(noticiasLinks);
-				NoticiaDAO.getInstance().save(collection, noticias);
-				nextPageUrl = getNextPage(result);
+				System.out.println("Pagina " + page);
+				savedNewsNum = NoticiaDAO.getInstance().save(collection, noticias, savedNewsNum);
+				page++;
+				nextPageUrl = getNextPage(result,page);
 			}
+			System.out.println("Terminou");
 			return null;
 		}
 		
-		private static String getNextPage(Document result) {
-			// TODO Auto-generated method stub
+		private static String getNextPage(Document result, int page) {
+			//Elements nextPage = result.select("div#navbar").select("td.b").select("a[href]");
+			Elements nextPage = null;
+			Elements navLinks = result.select("div#navbar").select("td");
+			for(Element e : navLinks){
+				if(e.text().equals(String.valueOf(page))){
+					nextPage = e.select("a[href]");
+					return nextPage.get(0).absUrl("href");
+				}
+			}
 			return null;
 		}
 
@@ -70,12 +79,12 @@ public class Brasil247Crawler {
 				try {
 					doc = Jsoup.connect(link).timeout(0).userAgent(userAgent).get();
 				} catch (IOException e) {
-					System.out.println("Problema ao pegar o html");
+					System.out.println("Problema ao pegar o html da noticia: " + link);
 					e.printStackTrace();
 					continue;
 				}
 				
-				Noticia noticia = getNoticia(doc,null,null);
+				Noticia noticia = getNoticia(doc,DateUtil.dataInicial(),DateUtil.dataFinal());
 				//System.out.println(doc.toString());
 				if(noticia == null) continue;
 				noticias.add(noticia);
@@ -84,9 +93,9 @@ public class Brasil247Crawler {
 		}
 
 		private static Noticia getNoticia(Document doc, Date periodoInicio, Date periodoFim) {
-			// TODO Filtra por periodo
 			
 			Elements entry = doc.select("div.entry");
+			if(entry == null || entry.size() == 0) return null;
 			Elements elements = entry.get(0).select("p");
 
 			if(!verificaNoticiaComTexto(elements)) return null;
@@ -137,16 +146,31 @@ public class Brasil247Crawler {
 	        }
 	        
 			//DATA
-			// TODO Filtra por periodo
-	        if(strData != null){
-	        	n.setData(getDate(strData));
-	        }
+	        Date dataNoticia;
+			try {
+				dataNoticia = getDate(strData);
+			} catch (NumberFormatException e1) {
+				System.out.println("Problema ao tentar converter a data: " + strData);
+				System.out.println(n.getTitulo() + " - " + doc.baseUri());
+				e1.printStackTrace();
+				return null;
+			} catch (NullPointerException e1) {
+				System.out.println("Data da noticia veio nula");
+				System.out.println(n.getTitulo() + " - " + doc.baseUri());
+				e1.printStackTrace();
+				return null;
+			}
+	        if(dataNoticia == null) return null;
+	        if(dataNoticia.after(periodoFim) || dataNoticia.before(periodoInicio)) return null;
+	        n.setData(dataNoticia);
+	        
 			return n;
 		}
 
-		private static Date getDate(String text){
-			Date d = null;
+		private static Date getDate(String text) throws NullPointerException,NumberFormatException{
+			if(text == null || text == "") throw new NullPointerException();
 			
+			Date d;
 			try {
 				String[] datahora = text.split("às");
 				
@@ -166,10 +190,8 @@ public class Brasil247Crawler {
 				Calendar calendar = Calendar.getInstance();
 				calendar.set(ano,mes,dia,h,m);
 				d = calendar.getTime();
-				
 			} catch (NumberFormatException e) {
-				System.out.println("Problema ao tentar converter a data");
-				e.printStackTrace();
+				throw new NumberFormatException();
 			}
 			return d;
 		}

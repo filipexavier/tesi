@@ -20,5 +20,13 @@ public class DateUtil {
 		
 		return d;
 	}
+
+	public static String getPrettyDate(Date data) {
+		StringBuilder sb = new StringBuilder();
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(data);
+		sb.append(calendar.get(Calendar.DAY_OF_MONTH)).append("/").append(calendar.get(Calendar.MONTH)+1).append("/").append(calendar.get(Calendar.YEAR));
+		return sb.toString();
+	}
 	
 }
