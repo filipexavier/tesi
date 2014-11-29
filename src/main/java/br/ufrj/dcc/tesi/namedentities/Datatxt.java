@@ -5,10 +5,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import br.ufrj.dcc.tesi.daos.NoticiaDAO;
 import br.ufrj.dcc.tesi.models.Noticia;
@@ -18,7 +15,6 @@ import br.ufrj.dcc.tesi.utils.MongoDBUtil;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;

@@ -12,13 +12,14 @@ import org.jsoup.select.Elements;
 import br.ufrj.dcc.tesi.daos.NoticiaDAO;
 import br.ufrj.dcc.tesi.enums.Portal;
 import br.ufrj.dcc.tesi.models.Noticia;
+import br.ufrj.dcc.tesi.utils.DateUtil;
 import br.ufrj.dcc.tesi.utils.MongoDBUtil;
 
 import com.mongodb.DBCollection;
 
 public class OGloboCrawler {
 
-	static int PAGE_NUMBER = 1;
+	static int PAGE_NUMBER = 10;
 	static int MAX_PAGE_NUMBER = 100;
 	
 	static final String SITE_BASE = "http://oglobo.globo.com/";
@@ -94,33 +95,39 @@ public class OGloboCrawler {
 		try {
 			e = page.get(0);
 			
-			titulo = e.getElementsByAttributeValue("itemprop", "headline").text();
-			subtitulo = e.getElementsByAttributeValue("itemprop", "description").text();
-			autor =  e.getElementsByAttributeValue("itemprop", "author").text();
-			
 			dataPublicacao = getDate(e.getElementsByClass("data-cadastro").text());
-			String dataAttStr = e.getElementsByClass("data-atualizacao").text();
-			if (!dataAttStr.isEmpty()) {
-				dataAtualizacao = getDate(dataAttStr.substring(11));
-			}
 			
-			corpoNoticia = e.select("div[itemprop=articleBody]");
-			for (Element p: corpoNoticia) {				
-				sb.append(p.getElementsByTag("p").text() + "\n");
+			//Considera apenas noticias dentro do periodo estabelecido
+			if (dataPublicacao.after(DateUtil.dataInicial()) && dataPublicacao.before(DateUtil.dataFinal())) {
+				
+				titulo = e.getElementsByAttributeValue("itemprop", "headline").text();
+				subtitulo = e.getElementsByAttributeValue("itemprop", "description").text();
+				autor =  e.getElementsByAttributeValue("itemprop", "author").text();
+				
+				dataPublicacao = getDate(e.getElementsByClass("data-cadastro").text());
+				String dataAttStr = e.getElementsByClass("data-atualizacao").text();
+				if (!dataAttStr.isEmpty()) {
+					dataAtualizacao = getDate(dataAttStr.substring(11));
+				}
+				
+				corpoNoticia = e.select("div[itemprop=articleBody]");
+				for (Element p: corpoNoticia) {				
+					sb.append(p.getElementsByTag("p").text() + "\n");
+				}
+				
+		        Noticia n = new Noticia();
+		        n.setPortal(Portal.OGLOBO);
+		        n.setUrl(url);
+		        n.setTitulo(titulo);
+		        n.setSubTitulo(subtitulo);
+		        n.setAutor(autor);
+		        n.setData(dataPublicacao);
+		        n.setDataAtualizacao(dataAtualizacao);
+		        n.setTexto(sb.toString());    
+		        
+		        NoticiaDAO.getInstance().save(collection, n);
 			}
-			
-	        Noticia n = new Noticia();
-	        n.setPortal(Portal.OGLOBO);
-	        n.setUrl(url);
-	        n.setTitulo(titulo);
-	        n.setSubTitulo(subtitulo);
-	        n.setAutor(autor);
-	        n.setData(dataPublicacao);
-	        n.setDataAtualizacao(dataAtualizacao);
-	        n.setTexto(sb.toString());    
-	        
-	        NoticiaDAO.getInstance().save(collection, n);
-	        
+				        
 		} catch (Exception e1) {
 			System.out.println("Padrao de artigo nao reconhecido. Tentaremos outro.");
 			newProcessPage(url, collection);
@@ -151,9 +158,6 @@ public class OGloboCrawler {
 		try {
 			e = page.get(0);
 			
-			titulo = e.getElementsByAttributeValue("itemprop", "headline").text();
-			autor =  e.getElementsByTag("h2").text().trim();
-			
 			Elements els = e.getElementsByClass("data-cadastro");
 			String dataPublicacaoStr = els.toString();
 			String dia = dataPublicacaoStr.substring(52, 54);
@@ -162,21 +166,28 @@ public class OGloboCrawler {
 			String horario = els.text();
 			horario = horario.replace('h', ':');
 			dataPublicacao = getDate(dia + "/" + mes + "/" + ano + " " + horario);
-
-			corpoNoticia = e.select("div[itemprop=articleBody]");
-			for (Element p: corpoNoticia) {				
-				sb.append(p.getElementsByTag("p").text() + "\n");
-			}
 			
-	        Noticia n = new Noticia();
-	        n.setPortal(Portal.OGLOBO);
-	        n.setUrl(url);
-	        n.setTitulo(titulo);
-	        n.setAutor(autor);
-	        n.setData(dataPublicacao);
-	        n.setTexto(sb.toString());    
-	        
-	        NoticiaDAO.getInstance().save(collection, n);
+			//Considera apenas noticias dentro do periodo estabelecido
+			if (dataPublicacao.after(DateUtil.dataInicial()) && dataPublicacao.before(DateUtil.dataFinal())) {
+				
+				titulo = e.getElementsByAttributeValue("itemprop", "headline").text();
+				autor =  e.getElementsByTag("h2").text().trim();
+
+				corpoNoticia = e.select("div[itemprop=articleBody]");
+				for (Element p: corpoNoticia) {				
+					sb.append(p.getElementsByTag("p").text() + "\n");
+				}
+				
+		        Noticia n = new Noticia();
+		        n.setPortal(Portal.OGLOBO);
+		        n.setUrl(url);
+		        n.setTitulo(titulo);
+		        n.setAutor(autor);
+		        n.setData(dataPublicacao);
+		        n.setTexto(sb.toString());    
+		        
+		        NoticiaDAO.getInstance().save(collection, n);
+			}
 	        
 		} catch (Exception e1) {
 			System.out.println("Nao foi possivel processar o padrao de artigo.");

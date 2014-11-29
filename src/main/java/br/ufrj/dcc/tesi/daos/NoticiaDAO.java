@@ -6,7 +6,6 @@ import twitter4j.JSONObject;
 import br.ufrj.dcc.tesi.models.Noticia;
 import br.ufrj.dcc.tesi.utils.DateUtil;
 
-import com.google.gson.JsonObject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
