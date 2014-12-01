@@ -7,7 +7,7 @@ public class DateUtil {
 
 	public static Date dataInicial() {
 		Calendar calendar = Calendar.getInstance();
-		calendar.set(2014, 7, 31, 0, 0);
+		calendar.set(2014, 6, 31, 23, 59);
 		Date d = calendar.getTime();
 		
 		return d;
@@ -15,7 +15,7 @@ public class DateUtil {
 	
 	public static Date dataFinal() {
 		Calendar calendar = Calendar.getInstance();
-		calendar.set(2014, 11, 1, 0, 0);
+		calendar.set(2014, 10, 1, 0, 0);
 		Date d = calendar.getTime();
 		
 		return d;

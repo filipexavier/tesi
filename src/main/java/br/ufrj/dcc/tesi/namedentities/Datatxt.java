@@ -15,6 +15,7 @@ import br.ufrj.dcc.tesi.utils.MongoDBUtil;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
@@ -22,41 +23,34 @@ import com.mongodb.util.JSON;
 
 public class Datatxt {
 	
-	private static final String ID = "0936d14f";
-	private static final String KEY = "0057de6c2259788f64b622bef7e36d28";
+	private static final String ID = "822a9e86";
+	private static final String KEY = "bfcc413d10910ba6c3542356b9478337";
 	public static final String URL = "https://api.dandelion.eu/datatxt/nex/v1/?";
 	public static final String APPEND_CHARAC = "&";
-	public static final String ATTRIBUTES = "include=image%2Cabstract%2Ctypes%2Ccategories%2Clod&country=-1";
-	public static final int MAX_CHARAC_HTML_GET = 6500;
+	public static final String ATTRIBUTES = "include=image%2Ccategories%2Clod&country=-1";
+	public static final int MAX_CHARAC_HTML_GET = 3000;
 
 	public static void main(String[] args){
-		PrintWriter writer = null;
-		try {
-			writer = new PrintWriter("Noticias.txt", "UTF-8");
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			return;
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-			return;
-		}
-		
-		populaNoticiasDatatxt(writer);
-//		writer.close();
+		System.out.println("Iniciando...");
+		populaNoticiasDatatxt();
 	}
 
-	public static void populaNoticiasDatatxt(PrintWriter writer){
+	public static void populaNoticiasDatatxt(){
+		System.out.println("Tentando conexao com o Mongolab...");
 		DBCollection collection = MongoDBUtil.getInstance().getDatabase().getCollection(MongoDBUtil.COLLECTION);
-		DBCursor cursor = collection.find();
+		System.out.println("Conectado ao banco!");
+		DBObject query = new BasicDBObject("entidades", new BasicDBObject("$exists", false));
+		System.out.println("Lista de noticias recuperada do banco.");
+		DBCursor cursor = collection.find(query);
 		try {
-			saveNamedEntities(cursor,collection,writer);
+			saveNamedEntities(cursor,collection);
 		} catch (UnsupportedEncodingException e) {
 			System.out.println("Problema ao montar a url");
 			e.printStackTrace();
 		}
 	}
 	
-	public static void saveNamedEntities(DBCursor cursor, DBCollection collection, PrintWriter writer) throws UnsupportedEncodingException{
+	public static void saveNamedEntities(DBCursor cursor, DBCollection collection) throws UnsupportedEncodingException{
 		while(cursor.hasNext()){
 			DBObject n = cursor.next();
 			if(n.get("texto") == null) continue;
@@ -150,15 +144,20 @@ public class Datatxt {
 	private static List<String> divideTexto(String txt, int maxCharacHtmlGet) {
 		List<String> subLists = new ArrayList<String>();
 		while(txt.length()>maxCharacHtmlGet){
-			for(int i = maxCharacHtmlGet; i<txt.length(); i++){
+			System.out.println("Dividindo o corpo da noticia...");
+			for(int i = maxCharacHtmlGet; i>=0; i--){
 				if(String.valueOf(txt.charAt(i)).equals(".")){
-					subLists.add(txt.subSequence(0, i-1).toString());
+					subLists.add(txt.subSequence(0, i).toString());
 					if(String.valueOf(txt.charAt(i+1)).equals("+")){
 						txt = txt.substring(i+2);
 					} else{
 						txt = txt.substring(i+1);
 					}
 					break;
+				}
+				if(i == 0){
+					subLists.add(txt.subSequence(0, maxCharacHtmlGet).toString());
+					txt = txt.substring(maxCharacHtmlGet+1);
 				}
 			}
 		}
@@ -172,9 +171,7 @@ public class Datatxt {
 		obj.removeField("spot");
 		obj.removeField("confidence");
 		obj.removeField("id");
-		obj.removeField("abstract");
 		obj.removeField("title");
-		obj.removeField("types");
 	}
 	private static void writeDataToFile(PrintWriter writer, JsonObject obj) {
 		writer.println(obj.get("label"));

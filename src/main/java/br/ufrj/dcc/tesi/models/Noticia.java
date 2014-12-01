@@ -75,6 +75,12 @@ public class Noticia implements Serializable {
 			System.out.println("Nao foi possivel obter o campo data da noticia recuperada do banco");
 		}
 		try {
+			this.dataAtualizacao = MongoDBUtil.parseDate(n.get("dataAtualizacao").toString());
+		} catch (Exception e) {
+			System.out.println("Nao foi possivel obter o campo data de atualização da noticia recuperada do banco");
+		}
+
+		try {
 			this.portal = Portal.valueOf((n.get("portal").toString()));
 		} catch (Exception e) {
 			System.out.println("Nao foi possivel obter o campo portal da noticia recuperada do banco");

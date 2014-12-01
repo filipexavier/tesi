@@ -30,7 +30,8 @@ public class OGloboCrawler {
 		while (PAGE_NUMBER <= MAX_PAGE_NUMBER) {
 			getWeblink(PAGE_NUMBER, collection);
 			PAGE_NUMBER++;
-		}        
+		} 
+		System.out.println("Isso eh tudo, pessoal!");
 	}
 
 	public static void getWeblink(int page_number, DBCollection collection) throws IOException {

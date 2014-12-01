@@ -25,8 +25,9 @@ import com.mongodb.DBCollection;
 public class Brasil247Crawler {
 	
 		//Resultado da busca no Brasil247 por "Eleições 2014"
-		private static String url = "http://www.google.com.br/cse?cx=partner-pub-8594520780167960:4101184130&ie=UTF-8&q=elei%C3%A7%C3%B5es+2014&sa=Buscar&ref=&nojs=1";
-		private static String userAgent = "Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6";
+		private static String url = "http://www.google.com.br/custom?safe=active&client=pub-8594520780167960&cof=FORID%3A13%3BAH%3Aleft%3BCX%3ABrasil247-search%3BL%3Ahttp%3A%2F%2Fwww.brasil247.com%2Fimages%2Fcms-image-000396177.jpg%3BLH%3A50%3BLC%3A%230000FF%3BVLC%3A%23663399%3BKMBGC%3A%23EEEEEE%3BKMSC%3A%23333333%3BKMTC%3A%231155CC%3BKMTVC%3A%231155CC%3BKMUC%3A%23009933%3B&cx=partner-pub-8594520780167960%3A4101184130&adkw=AELymgUJasu6CbQgph8diDjWMO2WME4rDNSSuzyN6CttNZnM9Pw6Eda51RkFN-NmzGaIdC88tXDnzpjuPksZWvg4bRpAUwVReBpENjMXY11fGjYBbjTitOaAsyInsqHhV6dL-2l0YnA1xlsVuZ0TEBEYaDepNphfLw&hl=pt-BR&boostcse=0&q=economia+brasil&btnG=Pesquisar";
+		private static String url_eleicoes = "http://www.google.com.br/custom?q=elei%C3%A7%C3%B5es+2014&safe=active&client=pub-8594520780167960&cof=FORID:13%3BAH:left%3BCX:Brasil247-search%3BL:http://www.brasil247.com/images/cms-image-000396177.jpg%3BLH:50%3BLC:%230000FF%3BVLC:%23663399%3BKMBGC:%23EEEEEE%3BKMSC:%23333333%3BKMTC:%231155CC%3BKMTVC:%231155CC%3BKMUC:%23009933%3B&cx=partner-pub-8594520780167960:4101184130&adkw=AELymgUJasu6CbQgph8diDjWMO2WME4rDNSSuzyN6CttNZnM9Pw6Eda51RkFN-NmzGaIdC88tXDnzpjuPksZWvg4bRpAUwVReBpENjMXY11fGjYBbjTitOaAsyInsqHhV6dL-2l0YnA1xlsVuZ0TEBEYaDepNphfLw&hl=pt-BR&boostcse=0&prmd=ivns&ei=hXx7VJKlFomUNs7AgsgH&start=840&sa=N";
+			private static String userAgent = "Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6";
 		private static Integer savedNewsNum = 1;	
 		public static void main(String[] args) throws IOException, ParseException {
 			
@@ -74,6 +75,7 @@ public class Brasil247Crawler {
 
 		private static List<Noticia> getNoticiasFromLinks(List<String> noticiasLinks) {
 			List<Noticia> noticias = new ArrayList<Noticia>();
+			System.out.println(noticiasLinks.size() + " links");
 			for (String link : noticiasLinks) {
 				Document doc;
 				try {
@@ -95,10 +97,16 @@ public class Brasil247Crawler {
 		private static Noticia getNoticia(Document doc, Date periodoInicio, Date periodoFim) {
 			
 			Elements entry = doc.select("div.entry");
-			if(entry == null || entry.size() == 0) return null;
+			if(entry == null || entry.size() == 0){
+				System.out.println("Não foi possível reconhecer o corpo da noticia " + doc.baseUri());
+				return null;
+			}
 			Elements elements = entry.get(0).select("p");
 
-			if(!verificaNoticiaComTexto(elements)) return null;
+			if(!verificaNoticiaComTexto(elements)){
+				System.out.println("Não foi possível reconhecer o corpo da noticia " + doc.baseUri());
+				return null;
+			}
 			Noticia n = new Noticia();
 			String strData = null;
 
@@ -160,8 +168,14 @@ public class Brasil247Crawler {
 				e1.printStackTrace();
 				return null;
 			}
-	        if(dataNoticia == null) return null;
-	        if(dataNoticia.after(periodoFim) || dataNoticia.before(periodoInicio)) return null;
+	        if(dataNoticia == null) {
+	        	System.out.println("Não foi possível reconhecer a data da noticia " + n.getTitulo());
+	        	return null;
+	        }
+	        if(dataNoticia.after(periodoFim) || dataNoticia.before(periodoInicio)) {
+	        	System.out.println("Noticia " + n.getTitulo() + " - " + DateUtil.getPrettyDate(dataNoticia) + " fora do período.");
+	        	return null;
+	        }
 	        n.setData(dataNoticia);
 	        
 			return n;

@@ -33,6 +33,12 @@ public class NoticiaDAO {
 			save(collection, n);
 		}
 	}
+	
+	public void save(DBCollection collection, Noticia n, int count) {
+		String msg = "Noticia " + count + " de " + DateUtil.getPrettyDate(n.getData()) + " do " + n.getPortal() + " salva: " + n.getTitulo();
+		save(collection,n,msg);
+	}
+	
 	public void save(DBCollection collection, Noticia n) {
 		save(collection,n,null);
 	}

@@ -31,10 +31,9 @@ public class VejaCrawler {
 	public static void main(String[] args) throws IOException, ParseException {
 		
 		Document doc = Jsoup.connect(url).timeout(0).userAgent("Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)").get();
-		System.out.println(doc);
 		
 		List<StringBuilder> sbList = new ArrayList<StringBuilder>();
-        for(int i = 1; i <=22; i++){
+        for(int i = 1; i <=96; i++){
         	sbList.add(getFile("Resultados_pag" + i + ".html"));
         }
         List<Noticia> noticias = getLinksResult(sbList);
@@ -43,19 +42,44 @@ public class VejaCrawler {
         saveNoticias(noticias, collection);
 	}
 
-	private static void saveNoticias(List<Noticia> noticias,
-			DBCollection collection) throws IOException, ParseException {
+	private static void saveNoticias(List<Noticia> noticias, DBCollection collection) throws IOException, ParseException {
+		int savedNewsNum = 1;
 		for(Noticia n : noticias){
-	        Document doc = Jsoup.connect(n.getUrl()).timeout(0).get();
+	        Document doc;
+			try {
+				doc = Jsoup.connect(n.getUrl()).timeout(0).get();
+			} catch (Exception e3) {
+				System.out.println("Problema ao pegar o html da noticia: " + n.getUrl());
+				e3.printStackTrace();
+				continue;
+			}
 	        StringBuilder corpo = new StringBuilder();
 	        for(Element e : doc.getElementsByTag("p")){
 	        	corpo.append(e.text());
 	        }
 	        n.setTitulo(doc.select("h1.t-bigger-black").get(0).text());
+	        try {
+				n.setSubTitulo(doc.select("h2.subtitle").get(0).text());
+			} catch (Exception e2) {
+				System.out.println("Não foi possível obter o subtitulo: " + doc.baseUri());
+			}
+	        try {
+				n.setAutor(getAutor(doc));
+			} catch (Exception e1) {
+				System.out.println("Não foi possível obter a data: " + doc.baseUri());
+			}
 	        n.setData(getDate(doc.getElementsByClass("data-hora").get(0).text()));
 	        n.setTexto(corpo.toString());
-            NoticiaDAO.getInstance().save(collection, n);
+            NoticiaDAO.getInstance().save(collection, n, savedNewsNum);
+            savedNewsNum++;
         }
+	}
+
+	private static String getAutor(Document doc) throws NullPointerException {
+		String autor_lugar = doc.select("div.signature").get(0).text();
+		if(autor_lugar == null) throw new NullPointerException();
+		String[] autor = autor_lugar.split(",");
+		return autor[0];
 	}
 
 	private static Date getDate(String text) throws ParseException {
